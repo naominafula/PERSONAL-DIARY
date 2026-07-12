@@ -63,7 +63,19 @@ def get_my_entries():
     user_entries = JournalEntry.query.filter_by(username=current_user).all()
     
     return jsonify([entry.to_dict() for entry in user_entries]), 200
-@routes_bp.route('/mro-proof', methods=['GET'])
-def show_mro():
-    """Renders a beautiful UI page displaying your MRO lookup chain."""
-    return render_template('mro.html')
+@routes_bp.route('/api/entries/<int:entry_id>', methods=['DELETE'])
+@jwt_required()
+def delete_entry(entry_id):
+    current_user = get_jwt_identity()
+    entry = JournalEntry.query.get(entry_id)
+    if not entry:
+        return jsonify({"message": f"Entry ID {entry_id} not found"}), 404
+    if entry.username != current_user:
+        return jsonify({"message": "Unauthorized to delete this entry"}), 403
+    try:
+        db.session.delete(entry)
+        db.session.commit()
+        return jsonify({"message": "Entry deleted successfully!"}), 200
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"message": f"Database error: {str(e)}"}), 500 
