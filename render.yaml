@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: personal-diary-2
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:app
+    repo: https://github.com/naominafula/PERSONAL-DIARY
+    branch: main
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: personal-diary-db
+          property: connectionString
+      - key: JWT_SECRET_KEY
+        generateValue: true
+
+databases:
+  - name: personal-diary-db
+    databaseName: diary
+    plan: free
+    region: oregon
